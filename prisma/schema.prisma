@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @db.VarChar(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  roleId    Int // Foreign key relationship with Roles
+  role      Roles    @relation(fields: [roleId], references: [id])
+  Todo      Todo[]
+
+  @@map("users")
+}
+
+// Roles model representing user roles
+model Roles {
+  id          Int          @id @default(autoincrement())
+  roleName    String       @db.VarChar(50)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  permissions Permissions? // One-to-one relationship with Permissions
+  users       User[] // One-to-many relationship with User
+
+  @@map("roles")
+}
+
+// Permissions model representing permissions
+model Permissions {
+  id     Int     @id @default(autoincrement())
+  create Boolean @default(false)
+  read   Boolean @default(false)
+  update Boolean @default(false)
+  delete Boolean @default(false)
+  roleId Int     @unique // Unique attribute added
+  role   Roles   @relation(fields: [roleId], references: [id])
+
+  @@map("permissions")
+}
+
+model Todo {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(50)
+  description String   @db.VarChar(200)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("todos")
+}
