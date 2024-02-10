@@ -25,7 +25,7 @@ model User {
 // Roles model representing user roles
 model Roles {
   id          Int          @id @default(autoincrement())
-  roleName    String       @db.VarChar(50)
+  roleName    UserRole
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   permissions Permissions? // One-to-one relationship with Permissions
@@ -45,6 +45,13 @@ model Permissions {
   role   Roles   @relation(fields: [roleId], references: [id])
 
   @@map("permissions")
+}
+
+// Enum representing user roles
+enum UserRole {
+  ADMIN
+  MOD
+  USER
 }
 
 model Todo {
