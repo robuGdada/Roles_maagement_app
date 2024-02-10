@@ -34,6 +34,12 @@ model Roles {
   @@map("roles")
 }
 
+enum UserRole {
+  ADMIN
+  MOD
+  USER
+}
+
 // Permissions model representing permissions
 model Permissions {
   id     Int     @id @default(autoincrement())
@@ -45,13 +51,6 @@ model Permissions {
   role   Roles   @relation(fields: [roleId], references: [id])
 
   @@map("permissions")
-}
-
-// Enum representing user roles
-enum UserRole {
-  ADMIN
-  MOD
-  USER
 }
 
 model Todo {
