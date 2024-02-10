@@ -4,13 +4,18 @@ import dotenv from "dotenv";
 import { mainHtml } from "./body";
 import { editHtml, formHtml } from "./form";
 import { PrismaClient } from "@prisma/client";
+import { userRoute } from "./resources/users";
 
 const app = express();
 dotenv.config();
+app.use(express.json());
+
 const Port = process.env.PORT;
 const prisma = new PrismaClient();
 // Set static folder
 app.use(express.static("public"));
+
+app.use(userRoute);
 
 app.get("/", function (req, res) {
   const html = Layout({
@@ -193,7 +198,7 @@ app.post("/search/todos-data", async (req, res) => {
 // POST REQ FOR CREATING TODOS (VIA CSV FILE OR REQ BODY)
 app.post("/add-todos", async (req, res) => {
   try {
-    const { title, description, userId } = req.body;
+    const { title, description } = req.body;
 
     // console.log({ n: { ...req.body.file } });
 
@@ -203,7 +208,7 @@ app.post("/add-todos", async (req, res) => {
       data: {
         title,
         description,
-        userId,
+        userId: 1,
       },
     });
 
