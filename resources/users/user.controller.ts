@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
-import { IUserData, userRepo } from "./user.repo";
-import { PrismaClient } from "@prisma/client";
+import { userRepo } from "./user.repo";
+import { PrismaClient, UserRole } from "@prisma/client";
 import { roleAndPermission } from "./role.permission";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
@@ -31,14 +33,78 @@ const getAll = async (req: Request, res: Response) => {
 };
 
 //createUser
-const createUser = async (req: Request, res: Response) => {
-  const { username, role } = req.body;
 
-  const userData: IUserData = {
-    username,
-    role,
-  };
-  console.log({ userData });
+// const createUser = async (req: Request, res: Response) => {
+//   const { username, password, role } = req.body;
+//   const userData = { username, password, role };
+//   console.log({ userData });
+//   try {
+//     const existingUser = await prisma.user.findFirst({
+//       where: { username },
+//     });
+
+//     if (existingUser) {
+//       return res.status(400).json({
+//         errorType: "User_already_exists",
+//         message: "User already exists",
+//       });
+//     }
+
+//     const roleToFind = role as UserRole;
+//     console.log("Role to Find:", roleToFind);
+
+//     let roleFound = await prisma.roles.findFirst({
+//       where: { roleName: roleToFind },
+//     });
+
+//     console.log("Role Found:", roleFound);
+//     if (!roleFound) {
+//       return res.status(400).json({
+//         errorType: "Role_not_found",
+//         message: `Role not found for ${role}`,
+//       });
+//     } else {
+//       await roleAndPermission({ prisma, roleFound });
+//       const salt = bcrypt.genSaltSync(10);
+//       const hash = await bcrypt.hash(password, salt);
+//       const createdUser = await prisma.user.create({
+//         data: {
+//           username,
+//           password: hash,
+//           role: {
+//             create: {
+//               roleName: role as UserRole,
+//             },
+//           },
+//         },
+//       });
+//       const { sign } = jwt;
+//       const token = sign(
+//         {
+//           username,
+//           id: createdUser.id,
+//         },
+//         process.env.JWT_SECRET_KEY!
+//       );
+
+//       console.log({ hash, token });
+//       return res.status(201).json({
+//         message: "User created successfully",
+//         user: createdUser,
+//         token,
+//       });
+//     }
+//   } catch (error) {
+//     console.error(`Error creating user: ${error}`);
+//     return res.status(500).json({
+//       errorType: "Internal_server_error",
+//       message: "Internal Server Error",
+//     });
+//   }
+// };
+
+const createUser = async (req: Request, res: Response) => {
+  const { username, password, role } = req.body;
 
   try {
     const existingUser = await prisma.user.findFirst({
@@ -51,32 +117,56 @@ const createUser = async (req: Request, res: Response) => {
         message: "User already exists",
       });
     }
-
     const roleFound = await prisma.roles.findFirst({
       where: { roleName: role },
     });
-
-    console.log({ role: roleFound });
-
     if (!roleFound) {
       return res.status(400).json({
         errorType: "Role_not_found",
-        message: `Role not found for ${userData.role}`,
+        message: `Role not found for ${role}`,
       });
     } else {
       await roleAndPermission({ prisma, roleFound });
-    }
+      const salt = bcrypt.genSaltSync(10);
+      const hash = await bcrypt.hash(password, salt);
+      const createdUser = await prisma.user.create({
+        data: {
+          username,
+          password: hash,
+          role: {
+            create: {
+              roleName: role as UserRole,
+            },
+          },
+        },
+      });
 
-    await userRepo.createUser(userData);
-    return res.status(201).json({ message: "User created successfully" });
-  } catch (e) {
-    console.log(e);
+      const { sign } = jwt;
+      const token = sign(
+        {
+          username,
+          id: createdUser.id,
+        },
+        process.env.JWT_SECRET_KEY!
+      );
+
+      console.log({ hash, token });
+      return res.status(201).json({
+        message: "User created successfully",
+        user: createdUser,
+        token,
+      });
+    }
+  } catch (error) {
+    console.error(`Error creating user: ${error}`);
     return res.status(500).json({
       errorType: "Internal_server_error",
       message: "Internal Server Error",
     });
   }
 };
+
+export default createUser;
 
 export const userController = {
   getAll,
