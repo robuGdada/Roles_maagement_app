@@ -2,6 +2,7 @@
 CREATE TABLE `users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `username` VARCHAR(50) NOT NULL,
+    `passwword` VARCHAR(200) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `roleId` INTEGER NOT NULL,
@@ -12,7 +13,7 @@ CREATE TABLE `users` (
 -- CreateTable
 CREATE TABLE `roles` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `roleName` VARCHAR(50) NOT NULL,
+    `roleName` ENUM('ADMIN', 'MOD', 'USER') NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
