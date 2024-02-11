@@ -13,6 +13,7 @@ datasource db {
 model User {
   id        Int      @id @default(autoincrement())
   username  String   @db.VarChar(50)
+  passwword String   @db.VarChar(200)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   roleId    Int // Foreign key relationship with Roles
