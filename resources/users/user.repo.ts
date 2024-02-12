@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole } from "@prisma/client";
+import { Prisma, PrismaClient, UserRole } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -7,6 +7,7 @@ export type IUserData = {
   password: string;
   role: UserRole;
 };
+
 //getUser
 
 export const getAll = async (offset: number, pageSize: number) => {
@@ -14,7 +15,13 @@ export const getAll = async (offset: number, pageSize: number) => {
   return await prisma.user.findMany({
     skip: offset,
     take: pageSize,
-    select: { role: true },
+    select: {
+      id: true,
+      username: true,
+      password: true,
+      roleId: true,
+      role: true,
+    },
     orderBy: {
       createdAt: "desc",
     },
@@ -39,6 +46,18 @@ export const getAllWithSearch = async (
       createdAt: "desc",
     },
   });
+};
+const getOneUser = async (payload: Prisma.UserWhereUniqueInput) => {
+  try {
+    return await prisma.user.findFirst({
+      where: {
+        username: payload.username,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 };
 
 // post | mutation
@@ -71,4 +90,5 @@ export const getAllWithSearch = async (
 export const userRepo = {
   getAll,
   getAllWithSearch,
+  getOneUser,
 };
