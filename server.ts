@@ -2,7 +2,7 @@ import express from "express";
 import { Layout, NewComponent } from "./layout";
 import dotenv from "dotenv";
 import { mainHtml } from "./body";
-import { editHtml, formHtml } from "./form";
+import { editHtml, formHtml, loginHtml } from "./form";
 import { PrismaClient } from "@prisma/client";
 import { userRoute } from "./resources/users";
 
@@ -14,18 +14,26 @@ const Port = process.env.PORT;
 const prisma = new PrismaClient();
 // Set static folder
 app.use(express.static("public"));
-
+// Parse URL-encoded bodies (as sent by HTML forms)
+app.use(express.urlencoded({ extended: true }));
 app.use(userRoute);
 
 app.get("/", function (req, res) {
   const html = Layout({
     children: NewComponent({
-      children: mainHtml(),
+      children: loginHtml(),
     }),
   });
   res.send(html);
 });
-
+app.get("/todos", function (req, res) {
+  res.set("user-data", "text/html");
+  res.send(
+    NewComponent({
+      children: mainHtml(),
+    })
+  );
+});
 app.get("/get/todo", function (req, res) {
   res.set("user-data", "text/html");
   res.send(
@@ -198,7 +206,7 @@ app.post("/search/todos-data", async (req, res) => {
 // POST REQ FOR CREATING TODOS (VIA CSV FILE OR REQ BODY)
 app.post("/add-todos", async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { title, description, userId } = req.body;
 
     // console.log({ n: { ...req.body.file } });
 
@@ -208,7 +216,7 @@ app.post("/add-todos", async (req, res) => {
       data: {
         title,
         description,
-        userId: 1,
+        userId,
       },
     });
 
