@@ -26,39 +26,26 @@ model User {
 // Roles model representing user roles
 model Role {
   id               Int                @id @default(autoincrement())
-  roleName         UserRole
+  roleName         String
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   users            User[] //1-m w user
-  permissionOnRole permissionOnRole[] //m-m with role and permission
+  permissionOnRole PermissionOnRole[] //m-m with role and permission
 
   @@map("role")
-}
-
-enum UserRole {
-  ADMIN
-  MOD
-  USER
-}
-
-enum permissionAction {
-  read
-  create
-  update
-  delete
 }
 
 // Permissions model representing permissions
 model Permission {
   id               Int                @id @default(autoincrement())
-  action           permissionAction
+  action           String
   resource         String
-  permissionOnRole permissionOnRole[]
+  permissionOnRole PermissionOnRole[]
 
   @@map("permission")
 }
 
-model permissionOnRole {
+model PermissionOnRole {
   roleId       Int
   permissionId Int
   role         Role       @relation(fields: [roleId], references: [id])
