@@ -1,5 +1,6 @@
 import express from "express";
-import { userController } from "./user.controller";
+import { userController, verifyUser } from "./user.controller";
+import { prisma } from "../../server";
 
 export const userRoute = express.Router();
 
@@ -11,6 +12,6 @@ userRoute.post("/create-user", async (req, res) => {
   await userController.createUser(req, res);
 });
 
-userRoute.post("/signin", async (req, res) => {
+userRoute.post("/signin", verifyUser, async (req, res) => {
   await userController.signin(req, res);
 });
