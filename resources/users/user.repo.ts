@@ -1,11 +1,10 @@
-import { Prisma, PrismaClient, UserRole } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { Prisma, PrismaClient } from "@prisma/client";
+import { prisma } from "../../server";
 
 export type IUserData = {
   username: string;
   password: string;
-  role: UserRole;
+  role: string;
 };
 
 //getUser
@@ -19,8 +18,19 @@ export const getAll = async (offset: number, pageSize: number) => {
       id: true,
       username: true,
       password: true,
-      roleId: true,
-      role: true,
+      role: {
+        select: {
+          id: true,
+          roleName: true,
+
+          permissionOnRole: {
+            select: {
+              permission: true,
+              role: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
