@@ -3,15 +3,20 @@ import { Layout, NewComponent } from "./layout";
 import dotenv from "dotenv";
 import { mainHtml } from "./body";
 import { editHtml, formHtml, loginHtml } from "./form";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, User } from "@prisma/client";
 import { userRoute } from "./resources/users";
+import { seeding } from "./seeding/seed";
+import {
+  permissionVerify,
+  verifyUser,
+} from "./resources/users/user.controller";
 
 const app = express();
 dotenv.config();
 app.use(express.json());
 
 const Port = process.env.PORT;
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 // Set static folder
 app.use(express.static("public"));
 // Parse URL-encoded bodies (as sent by HTML forms)
@@ -21,7 +26,7 @@ app.use(userRoute);
 app.get("/", function (req, res) {
   const html = Layout({
     children: NewComponent({
-      children: loginHtml(),
+      children: mainHtml(),
     }),
   });
   res.send(html);
@@ -30,7 +35,7 @@ app.get("/todos", function (req, res) {
   res.set("user-data", "text/html");
   res.send(
     NewComponent({
-      children: mainHtml(),
+      children: loginHtml(),
     })
   );
 });
@@ -204,28 +209,32 @@ app.post("/search/todos-data", async (req, res) => {
 });
 
 // POST REQ FOR CREATING TODOS (VIA CSV FILE OR REQ BODY)
-app.post("/add-todos", async (req, res) => {
-  try {
-    const { title, description, userId } = req.body;
+app.post(
+  "/add-todos",
+  verifyUser,
+  permissionVerify(["create", "read", "update"]),
+  async (req, res) => {
+    try {
+      const { title, description } = req.body;
 
-    // console.log({ n: { ...req.body.file } });
+      // console.log({ n: { ...req.body.file } });
+      console.log({ title, description });
+      const authUser = req.authUser;
+      const todoData = await prisma.todo.create({
+        data: {
+          title,
+          description,
+          userId: authUser.id,
+        },
+      });
 
-    console.log({ title, description });
-
-    await prisma.todo.create({
-      data: {
-        title,
-        description,
-        userId,
-      },
-    });
-
-    return res.status(201).redirect("/");
-  } catch (e) {
-    console.log(e);
-    return res.status(304).send("Forbidden to create todos");
+      return res.status(201).json(todoData);
+    } catch (e) {
+      console.log(e);
+      return res.status(304).send("Forbidden to create todos");
+    }
   }
-});
+);
 
 // EDIT POST REQ TODOS
 app.post("/edit-todos", async (req, res) => {
@@ -266,6 +275,28 @@ app.delete("/remove-todos/:id", async (req, res) => {
     return res.status(404).send("Nothing here tto delete");
   }
 });
+
+app.get("/permission", async (req, res) => {
+  const permisiondata = await prisma.permission.findMany({
+    select: { id: true, action: true, resource: true },
+  });
+  return res.status(200).json(permisiondata);
+});
+app.post("/role", async (req, res) => {
+  try {
+    const { role } = req.body;
+    console.log({ role });
+    const roleData = await prisma.role.create({
+      data: {
+        roleName: role,
+      },
+    });
+    res.json(roleData);
+  } catch (e) {
+    res.status(404).send("New role not added");
+  }
+});
 app.listen(Port, () => {
+  // seeding();
   console.log(`Server running at ${Port}`);
 });
