@@ -23,7 +23,12 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.5",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "jest": "^29.7.0",
     "prisma": "^5.9.1",
+    "superagent": "^8.1.2",
+    "supertest": "^6.3.4",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
   }
