@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { prisma } from "../../server";
+import { prisma } from "../../app";
 
 export type IUserData = {
   username: string;

@@ -4,8 +4,9 @@ import { PrismaClient, User } from "@prisma/client";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { prisma } from "../../server";
+
 import { permissionRole } from "./role.permission";
+import { prisma } from "../../app";
 
 const getAll = async (req: Request, res: Response) => {
   const currentPage = Number(req.query.page) || 1;
@@ -168,7 +169,7 @@ type UserPermission = {
   };
 };
 
-export const permissionVerify = (requiredActions: string[]) => {
+export const permissionVerify = (requiredAction: string) => {
   return async (
     req: Request & { authUser: { roleId: number } },
     res: Response,
@@ -177,36 +178,21 @@ export const permissionVerify = (requiredActions: string[]) => {
     try {
       const { roleId } = req.authUser;
 
-      const userPermissions: UserPermission[] =
-        await prisma.permissionOnRole.findMany({
-          where: {
-            roleId,
+      const hasPermission = await prisma.permissionOnRole.findFirst({
+        where: {
+          roleId,
+          permission: {
+            action: requiredAction,
           },
-          select: {
-            permission: {
-              select: {
-                action: true,
-              },
-            },
-          },
-        });
+        },
+      });
 
-      // Extract action strings from the result
-      const userActionStrings = userPermissions.map((p) => p.permission.action);
-
-      // Check if all required actions are present in the user's permissions
-      const allActionsPresent = requiredActions.every((a) =>
-        userActionStrings.includes(a)
-      );
-
-      if (allActionsPresent) {
+      if (hasPermission) {
         next();
       } else {
         return res.status(403).json({
           errorType: "Permission_denied",
-          message: `Permission denied. User does not have all of the required permissions (${requiredActions.join(
-            ", "
-          )}).`,
+          message: `Permission denied. User does not have the required permission (${requiredAction}).`,
         });
       }
     } catch (error) {

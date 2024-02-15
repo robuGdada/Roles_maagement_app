@@ -1,4 +1,4 @@
-import { prisma } from "../../server";
+import { prisma } from "../../app";
 
 export const permissionRole = async (roleId: number) => {
   if (roleId === 1) {

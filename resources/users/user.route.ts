@@ -1,6 +1,5 @@
 import express from "express";
 import { userController, verifyUser } from "./user.controller";
-import { prisma } from "../../server";
 
 export const userRoute = express.Router();
 
