@@ -11,6 +11,6 @@ userRoute.post("/create-user", async (req, res) => {
   await userController.createUser(req, res);
 });
 
-userRoute.post("/signin", verifyUser, async (req, res) => {
+userRoute.post("/signin", async (req, res) => {
   await userController.signin(req, res);
 });
