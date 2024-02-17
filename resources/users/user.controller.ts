@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { userRepo } from "./user.repo";
-import { PrismaClient, User } from "@prisma/client";
+import { User } from "@prisma/client";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -89,7 +89,7 @@ const createUser = async (req: Request, res: Response) => {
 
 const signin = async (req: Request, res: Response) => {
   const { username, password } = req.body;
-  console.log({ username });
+  console.log({ username, password });
   try {
     const existingUser = await userRepo.getOneUser(username);
 
@@ -99,15 +99,9 @@ const signin = async (req: Request, res: Response) => {
         .json({ errorType: "USER_NOT_FOUND", message: "User not found." });
     }
 
-    if (!existingUser) {
-      return res.status(400).json({
-        errorType: "USER_NOT_FOUND",
-        message: "USER NOT FOUND",
-      });
-    }
     const matchPassword = bcrypt.compareSync(
       password,
-      String(existingUser?.password)
+      String(existingUser.password)
     );
     if (!matchPassword) {
       return res.status(400).json({
@@ -115,17 +109,18 @@ const signin = async (req: Request, res: Response) => {
         message: "Invalid credentials.",
       });
     }
+
     const { sign } = jwt;
     const token = sign(
-      { username: existingUser?.username, id: existingUser?.id },
+      { username: existingUser.username, id: existingUser.id },
       process.env.JWT_SECRET_KEY!
     );
     console.log({ existingUser });
-    return res.status(200).json({ user: existingUser, token });
+    res.set("Authorization", `Bearer ${token}`);
+    return res.redirect(`/todos?token=${token}`);
   } catch (e) {
     console.log(e);
     return res
-
       .status(400)
       .json({ errorType: "USER_NOT_FOUND", message: "User not found." });
   }
