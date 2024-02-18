@@ -1,4 +1,4 @@
-const app = require("./app");
+import { app } from "./app";
 const Port = process.env.PORT;
 app.listen(Port, () => {
   // seeding();
