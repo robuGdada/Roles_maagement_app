@@ -10,6 +10,7 @@ import {
   permissionVerify,
   verifyUser,
 } from "./resources/users/user.controller";
+import test from "node:test";
 
 export const app = express();
 dotenv.config();
@@ -25,7 +26,7 @@ app.use(userRoute);
 app.get("/", function (req, res) {
   const html = Layout({
     children: NewComponent({
-      children: mainHtml(),
+      children: loginHtml(),
     }),
   });
   res.send(html);
@@ -34,7 +35,7 @@ app.get("/todos", function (req, res) {
   res.set("user-data", "text/html");
   res.send(
     NewComponent({
-      children: loginHtml(),
+      children: mainHtml(),
     })
   );
 });
@@ -48,31 +49,24 @@ app.get("/get/todo", function (req, res) {
 });
 
 //GET REQ FOR TODOS
-app.get(
-  "/todos-data",
-  verifyUser,
-  permissionVerify("read"),
-  async (req, res) => {
-    const pageSize = 8;
-    const page = Number(req.query?.page) || 1;
-    try {
-      const desiredTodos = await prisma.todo.findMany({
-        select: {
-          id: true,
-          title: true,
-          description: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      });
+app.get("/todos-data", async (req, res) => {
+  const pageSize = 8;
+  const page = Number(req.query?.page) || 1;
+  try {
+    const desiredTodos = await prisma.todo.findMany({
+      select: {
+        id: true,
+        title: true,
+        description: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
 
-      const todoHtml = (
-        res: { title: string; id: number },
-        isLast: boolean
-      ) => ` 
+    const todoHtml = (res: { title: string; id: number }, isLast: boolean) => ` 
       <div
       class="flex text-white px-[1.7rem] gap-5 items-center" 
       ${
@@ -103,63 +97,57 @@ app.get(
   
       `;
 
-      const getTodos = desiredTodos
-        .map((res, i) => {
-          return todoHtml(res, desiredTodos?.length - 1 === i);
-        })
-        .join("");
-      return res.status(200).json(desiredTodos);
-      // return res.status(200).send(getTodos);
-    } catch (e) {
-      console.log(e);
-      return res.status(404).send("todos Not found");
-    }
+    const getTodos = desiredTodos
+      .map((res, i) => {
+        return todoHtml(res, desiredTodos?.length - 1 === i);
+      })
+      .join("");
+    //   return res.status(200).json(desiredTodos);
+    return res.status(200).send(getTodos);
+  } catch (e) {
+    console.log(e);
+    return res.status(404).send("todos Not found");
   }
-);
+});
 
 //GET TODO THROUGH ID
-app.get(
-  "/get-todo/:id",
-  verifyUser,
-  permissionVerify("read"),
-  async (req, res) => {
-    try {
-      const searchId = req.params.id;
+app.get("/get-todo/:id", async (req, res) => {
+  try {
+    const searchId = req.params.id;
 
-      if (searchId === undefined || searchId === null) {
-        return res.status(400).send("Invalid todo ID");
-      }
-
-      const preserveId = await prisma.todo.findUnique({
-        where: {
-          id: Number(searchId),
-        },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-        },
-      });
-
-      if (!preserveId) {
-        return res.status(404).send("Todo not found");
-      }
-
-      return res.status(200).send(
-        NewComponent({
-          children: editHtml({
-            id: preserveId.id,
-            title: preserveId.title,
-            description: preserveId.description,
-          }),
-        })
-      );
-    } catch (e) {
-      console.error(e);
-      return res.status(500).send("Internal Server Error");
+    if (searchId === undefined || searchId === null) {
+      return res.status(400).send("Invalid todo ID");
     }
+
+    const preserveId = await prisma.todo.findUnique({
+      where: {
+        id: Number(searchId),
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+      },
+    });
+
+    if (!preserveId) {
+      return res.status(404).send("Todo not found");
+    }
+
+    return res.status(200).send(
+      NewComponent({
+        children: editHtml({
+          id: preserveId.id,
+          title: preserveId.title,
+          description: preserveId.description,
+        }),
+      })
+    );
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send("Internal Server Error");
   }
-);
+});
 
 //POST REQ THROUGH ID (VIA SEARCHING)
 app.post("/search/todos-data", async (req, res) => {
