@@ -10,11 +10,13 @@ import {
   permissionVerify,
   verifyUser,
 } from "./resources/users/user.controller";
-import test from "node:test";
+import { router } from "./routes/product";
 
-export const app = express();
+const app = express();
 dotenv.config();
 app.use(express.json());
+
+// app.use("/", router);
 
 export const prisma = new PrismaClient();
 // Set static folder
@@ -307,4 +309,5 @@ app.post("/role", async (req, res) => {
     res.status(404).send("New role not added");
   }
 });
-module.exports = app;
+
+export { app };
