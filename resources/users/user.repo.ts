@@ -10,7 +10,6 @@ export type IUserData = {
 //getUser
 
 export const getAll = async (offset: number, pageSize: number) => {
-  console.log("repo bhitra chiryo");
   return await prisma.user.findMany({
     skip: offset,
     take: pageSize,
