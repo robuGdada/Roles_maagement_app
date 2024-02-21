@@ -3,7 +3,6 @@ import { userRepo } from "./user.repo";
 import { User } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
 import { permissionRole } from "./role.permission";
 import { prisma } from "../../app";
 
@@ -12,7 +11,7 @@ const getAll = async (req: Request, res: Response) => {
   const pageSize = Number(req.query.page_size) || 10;
   const offset = pageSize * (currentPage - 1);
   const searchVal = req.query.q;
-  console.log("controller bhitra chiryo", { searchVal });
+
   try {
     if (!searchVal) {
       const users = await userRepo.getAll(offset, pageSize);
