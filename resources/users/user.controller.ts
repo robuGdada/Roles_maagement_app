@@ -112,6 +112,7 @@ const signin = async (req: Request, res: Response) => {
       { username: existingUser.username, id: existingUser.id },
       process.env.JWT_SECRET_KEY!
     );
+
     console.log({ existingUser });
     res.set("Authorization", `Bearer ${token}`);
     return res.redirect(`/todos?token=${token}`);
