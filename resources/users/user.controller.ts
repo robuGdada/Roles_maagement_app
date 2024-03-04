@@ -100,6 +100,7 @@ const signin = async (req: Request, res: Response) => {
       password,
       String(existingUser.password)
     );
+
     if (!matchPassword) {
       return res.status(400).json({
         errorType: "INVALID_CREDENTIALS",
@@ -113,7 +114,6 @@ const signin = async (req: Request, res: Response) => {
       process.env.JWT_SECRET_KEY!
     );
 
-    console.log({ existingUser });
     res.set("Authorization", `Bearer ${token}`);
     return res.redirect(`/todos?token=${token}`);
   } catch (e) {
